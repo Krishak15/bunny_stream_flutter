@@ -194,6 +194,14 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       allowFullScreen: true,
       allowMuting: true,
       showControls: true,
+      cupertinoProgressColors: ChewieProgressColors(
+        playedColor: Theme.of(context).primaryColor,
+        handleColor: Theme.of(context).primaryColor,
+        backgroundColor: Colors.grey,
+        bufferedColor: Colors.grey[300]!,
+      ),
+      hideControlsTimer: Duration(seconds: 2),
+      // startAt: position // if you want to start at a specific position
       materialProgressColors: ChewieProgressColors(
         playedColor: Theme.of(context).primaryColor,
         handleColor: Theme.of(context).primaryColor,

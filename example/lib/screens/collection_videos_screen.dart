@@ -39,12 +39,13 @@ class _CollectionVideosScreenState extends State<CollectionVideosScreen> {
     try {
       final bunny = BunnyStreamFlutter();
 
+      // Initialize Bunny Stream with configuration from BunnyConfig. 
       await bunny.initialize(
         accessKey: BunnyConfig.accessKey,
         libraryId: BunnyConfig.libraryId,
         cdnHostname: BunnyConfig.cdnHostname,
         token: BunnyConfig.secureToken,
-        expires: BunnyConfig.tokenExpires,
+        expires: BunnyConfig.tokenExpires, 
       );
 
       final videos = await bunny.listVideos(
@@ -243,6 +244,16 @@ class _VideoTile extends StatelessWidget {
     );
   }
 
+  
+  /// Builds a fully-qualified thumbnail URL for a video.
+  ///
+  /// Returns `null` when the thumbnail file name is empty or when the video
+  /// GUID is missing. If [thumbnailFileName] is already an absolute URL, it is
+  /// returned unchanged.
+  ///
+  /// For relative thumbnail names, this method uses the configured CDN host
+  /// when available; otherwise, it falls back to Bunny's default host format:
+  /// `vz-<libraryId>.b-cdn.net`.
   String? _buildThumbnailUrl(
     VideoDetailsModel video,
     String thumbnailFileName,
@@ -267,6 +278,10 @@ class _VideoTile extends StatelessWidget {
     return 'https://$host/$guid/$thumbnailName';
   }
 
+  /// Builds a thumbnail placeholder using a decoded blurhash when provided.
+  ///
+  /// Falls back to a neutral placeholder when decoding is pending, fails, or
+  /// when [blurhash] is empty.
   Widget _buildThumbnailPlaceholder({required String blurhash}) {
     if (blurhash.isNotEmpty) {
       return FutureBuilder<Uint8List?>(

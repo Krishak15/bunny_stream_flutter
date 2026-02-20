@@ -1,4 +1,4 @@
-Flutter plugin for Bunny.net Video on Android and iOS.
+## Flutter wrapper for Bunny.net mobile SDK.
 
 This package provides a single Dart API for:
 
@@ -224,7 +224,5 @@ Currently unimplemented natively on both platforms:
 
 - `listCollections`
 - `getCollection`
-
-Calling unimplemented methods returns `UNIMPLEMENTED_NATIVE`.
 
 

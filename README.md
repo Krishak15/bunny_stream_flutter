@@ -61,6 +61,19 @@ Collect these from Bunny Stream dashboard/back-end configuration:
 - `cdnHostname` (optional custom host)
 - `token` and `expires` (optional; for secure playback)
 
+## Bunny dashboard setup notes
+
+Before using this plugin in production, configure your Bunny Stream library:
+
+- Create a Stream library in Bunny.net.
+- Create at least one collection in that library to organize/store your videos.
+- Create a CDN hostname in the Bunny console for delivery.
+- Enable direct play in Bunny dashboard at `Stream > Security > General`.
+
+You can find the library-specific settings here:
+
+- https://dash.bunny.net/stream/$yourSpecificlibraryId/api
+
 ## Security notes
 
 - Do not hardcode production `accessKey` in client apps.
@@ -70,6 +83,12 @@ Collect these from Bunny Stream dashboard/back-end configuration:
 ## API reference
 
 Public entrypoint: `BunnyStreamFlutter`
+
+Official Bunny references:
+
+- Stream API reference: https://docs.bunny.net/api-reference/stream
+- Bunny Stream Android SDK: https://github.com/BunnyWay/bunny-stream-android
+- Bunny Stream iOS SDK: https://github.com/BunnyWay/bunny-stream-ios
 
 ### `initialize`
 
@@ -207,10 +226,6 @@ Currently unimplemented natively on both platforms:
 - `getCollection`
 
 Calling unimplemented methods returns `UNIMPLEMENTED_NATIVE`.
-
-## Example app
-
-See the sample app in [example](example) and setup notes in [example/ENV_SETUP.md](example/ENV_SETUP.md).
 
 ## Additional docs
 

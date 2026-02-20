@@ -227,8 +227,4 @@ Currently unimplemented natively on both platforms:
 
 Calling unimplemented methods returns `UNIMPLEMENTED_NATIVE`.
 
-## Additional docs
-
-- pub.dev package page: https://pub.dev/packages/bunny_stream_flutter
-- API docs (after publish): https://pub.dev/documentation/bunny_stream_flutter/latest/
 

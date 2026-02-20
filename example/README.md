@@ -2,15 +2,36 @@
 
 Demonstrates how to use the bunny_stream_flutter plugin.
 
-## Getting Started
+## Prerequisites
 
-This project is a starting point for a Flutter application.
+Collect these from Bunny Stream console:
 
-A few resources to get you started if this is your first Flutter project:
+- Stream `Library ID`
+- Stream `Access Key`
+- One `Video ID`
+- Optional custom `CDN Hostname`
+- Optional secure `token` and `expires` from your backend (if token auth enabled)
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Run Android example
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```bash
+cd example
+flutter pub get
+flutter run -d android
+```
+
+## Run iOS example
+
+```bash
+cd example
+flutter pub get
+flutter run -d ios
+```
+
+iOS requires 15.0+.
+
+## What this example demonstrates
+
+- Plugin initialization with Bunny credentials
+- Retrieving playback URLs via `getVideoPlayData`
+- Handling `BunnyStreamException` errors with code/message/details

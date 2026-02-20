@@ -1,4 +1,4 @@
-class BunnyVideo {
+class BunnyVideoModel {
   final String? guid;
   final String? title;
   final String? thumbnail;
@@ -9,7 +9,7 @@ class BunnyVideo {
   final String? storageZone;
   final String? previewUrl;
 
-  BunnyVideo({
+  BunnyVideoModel({
     this.guid,
     this.title,
     this.thumbnail,
@@ -21,8 +21,8 @@ class BunnyVideo {
     this.previewUrl,
   });
 
-  factory BunnyVideo.fromJson(Map<String, dynamic> json) {
-    return BunnyVideo(
+  factory BunnyVideoModel.fromJson(Map<String, dynamic> json) {
+    return BunnyVideoModel(
       guid: json['guid'] as String?,
       title: json['title'] as String?,
       thumbnail: json['thumbnail'] as String?,

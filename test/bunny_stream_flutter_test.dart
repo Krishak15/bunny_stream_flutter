@@ -69,6 +69,9 @@ class MockBunnyStreamFlutterPlatform
     return Future.value(<String, dynamic>{
       'videoPlaylistUrl': 'https://example.com/$videoId/playlist.m3u8',
       'fallbackUrl': 'https://example.com/$videoId/play_720p.mp4',
+      'url360p': 'https://example.com/$videoId/play_360p.mp4',
+      'url720p': 'https://example.com/$videoId/play_720p.mp4',
+      'url1080p': 'https://example.com/$videoId/play_1080p.mp4',
     });
   }
 }

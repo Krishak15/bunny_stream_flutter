@@ -44,4 +44,16 @@ class BunnyCollection {
   String get displayName => name ?? 'Untitled Collection';
   String get thumbnailUrl =>
       previewImageUrls?.isNotEmpty ?? false ? previewImageUrls!.first : '';
+
+  String? get firstPreviewVideoId {
+    final rawValue = previewVideoIds?.trim();
+    if (rawValue == null || rawValue.isEmpty) return null;
+
+    final ids = rawValue
+        .split(',')
+        .map((value) => value.trim())
+        .where((value) => value.isNotEmpty);
+
+    return ids.isNotEmpty ? ids.first : null;
+  }
 }

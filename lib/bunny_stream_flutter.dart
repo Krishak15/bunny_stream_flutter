@@ -127,6 +127,17 @@ class BunnyVideo {
       raw: Map<String, dynamic>.unmodifiable(map),
     );
   }
+
+  /// Get available resolutions as a list (e.g., ['240p', '360p', '720p', '1080p'])
+  List<String> get availableResolutions {
+    final resolutions = raw['availableResolutions']?.toString().trim() ?? '';
+    if (resolutions.isEmpty) return [];
+    return resolutions
+        .split(',')
+        .map((r) => r.trim())
+        .where((r) => r.isNotEmpty)
+        .toList();
+  }
 }
 
 class BunnyCollection {
@@ -147,11 +158,17 @@ class BunnyVideoPlayData {
   BunnyVideoPlayData({
     required this.playlistUrl,
     required this.fallbackUrl,
+    required this.url360p,
+    required this.url720p,
+    required this.url1080p,
     required this.raw,
   });
 
   final String playlistUrl;
   final String fallbackUrl;
+  final String url360p;
+  final String url720p;
+  final String url1080p;
   final Map<String, dynamic> raw;
 
   factory BunnyVideoPlayData.fromMap(Map<String, dynamic> map) {
@@ -159,6 +176,9 @@ class BunnyVideoPlayData {
       playlistUrl: (map['videoPlaylistUrl'] ?? map['playlistUrl'] ?? '')
           .toString(),
       fallbackUrl: (map['fallbackUrl'] ?? '').toString(),
+      url360p: (map['url360p'] ?? '').toString(),
+      url720p: (map['url720p'] ?? '').toString(),
+      url1080p: (map['url1080p'] ?? '').toString(),
       raw: Map<String, dynamic>.unmodifiable(map),
     );
   }

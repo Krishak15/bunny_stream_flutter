@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:bunny_stream_flutter_example/providers/collection_provider.dart';
-import 'package:bunny_stream_flutter_example/screens/video_player_screen.dart';
+import 'package:bunny_stream_flutter_example/screens/collection_videos_screen.dart';
 
 class CollectionsScreen extends StatefulWidget {
   const CollectionsScreen({super.key});
@@ -71,7 +71,7 @@ class _CollectionsScreenState extends State<CollectionsScreen> {
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (_) =>
-                            VideoPlayerScreen(collection: collection),
+                            CollectionVideosScreen(collection: collection),
                       ),
                     );
                   },

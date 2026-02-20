@@ -1,8 +1,11 @@
 import 'dart:developer' as developer;
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:blurhash/blurhash.dart';
 import 'package:bunny_stream_flutter_example/models/bunny_collection.dart'
     as models;
+import 'package:bunny_stream_flutter_example/models/video_detail.dart';
 import 'package:bunny_stream_flutter_example/config_extended.dart';
 import 'package:bunny_stream_flutter_example/screens/video_player_screen.dart';
 import 'package:bunny_stream_flutter/bunny_stream_flutter.dart';
@@ -17,7 +20,7 @@ class CollectionVideosScreen extends StatefulWidget {
 }
 
 class _CollectionVideosScreenState extends State<CollectionVideosScreen> {
-  List<BunnyVideo> _videos = [];
+  List<VideoDetailsModel> _videos = [];
   bool _isLoading = false;
   String? _error;
 
@@ -49,14 +52,18 @@ class _CollectionVideosScreenState extends State<CollectionVideosScreen> {
         collectionId: widget.collection.guid,
       );
 
+      final videoDetails = videos
+          .map((video) => VideoDetailsModel.fromJson(video.raw))
+          .toList();
+
       developer.log(
-        'Fetched ${videos.length} videos for collection ${widget.collection.guid}',
+        'Fetched ${videoDetails.length} videos for collection ${widget.collection.guid}',
         name: 'CollectionVideosScreen',
       );
 
       if (mounted) {
         setState(() {
-          _videos = videos;
+          _videos = videoDetails;
           _isLoading = false;
         });
       }
@@ -125,7 +132,7 @@ class _CollectionVideosScreenState extends State<CollectionVideosScreen> {
               MaterialPageRoute(
                 builder: (_) => VideoPlayerScreen(
                   collection: widget.collection,
-                  videoId: video.id,
+                  videoId: video.guid,
                 ),
               ),
             );
@@ -137,7 +144,7 @@ class _CollectionVideosScreenState extends State<CollectionVideosScreen> {
 }
 
 class _VideoTile extends StatelessWidget {
-  final BunnyVideo video;
+  final VideoDetailsModel video;
   final models.BunnyCollection collection;
   final VoidCallback onTap;
 
@@ -149,13 +156,16 @@ class _VideoTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = video.raw['title'] as String? ?? 'Untitled Video';
-    final thumbnail =
-        video.raw['thumbnail'] as String? ??
-        video.raw['previewUrl'] as String? ??
-        '';
-    final length = video.raw['length'] as int?;
-    final views = video.raw['views'] as int?;
+    developer.log(
+      'Video ${video.guid} - Title: ${video.title}, Duration: ${video.durationMinutes}, Views: ${video.views}',
+      name: '_VideoTile',
+    );
+    final title = video.displayTitle;
+    final thumbnailFileName = video.thumbnailFileName?.trim() ?? '';
+    final thumbnailBlurhash = video.thumbnailBlurhash?.trim() ?? '';
+    final thumbnailUrl = _buildThumbnailUrl(video, thumbnailFileName);
+    final durationText = video.durationMinutes;
+    final views = video.views;
 
     return GestureDetector(
       onTap: onTap,
@@ -169,25 +179,23 @@ class _VideoTile extends StatelessWidget {
               width: 120,
               height: 80,
               color: Colors.grey[300],
-              child: thumbnail.isNotEmpty
-                  ? Image.network(
-                      thumbnail,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: Colors.grey[400],
-                          child: const Center(
-                            child: Icon(Icons.video_library, size: 40),
-                          ),
-                        );
-                      },
+              child: thumbnailUrl != null
+                  ? Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        _buildThumbnailPlaceholder(blurhash: thumbnailBlurhash),
+                        Image.network(
+                          thumbnailUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return _buildThumbnailPlaceholder(
+                              blurhash: thumbnailBlurhash,
+                            );
+                          },
+                        ),
+                      ],
                     )
-                  : Container(
-                      color: Colors.grey[400],
-                      child: const Center(
-                        child: Icon(Icons.video_library, size: 40),
-                      ),
-                    ),
+                  : _buildThumbnailPlaceholder(blurhash: thumbnailBlurhash),
             ),
             // Title and info
             Expanded(
@@ -206,9 +214,9 @@ class _VideoTile extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    if (length != null)
+                    if (durationText != null)
                       Text(
-                        '${(length / 60).toStringAsFixed(1)} min',
+                        durationText,
                         style: TextStyle(color: Colors.grey[600], fontSize: 12),
                       ),
                     if (views != null)
@@ -232,6 +240,55 @@ class _VideoTile extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  String? _buildThumbnailUrl(
+    VideoDetailsModel video,
+    String thumbnailFileName,
+  ) {
+    final thumbnailName = thumbnailFileName.trim();
+    if (thumbnailName.isEmpty) return null;
+
+    if (thumbnailName.startsWith('http://') ||
+        thumbnailName.startsWith('https://')) {
+      return thumbnailName;
+    }
+
+    final guid = video.guid?.trim() ?? '';
+    if (guid.isEmpty) return null;
+
+    final configuredHost = BunnyConfig.cdnHostname?.trim();
+    final libraryId = video.videoLibraryId ?? BunnyConfig.libraryId;
+    final host = (configuredHost != null && configuredHost.isNotEmpty)
+        ? configuredHost
+        : 'vz-$libraryId.b-cdn.net';
+
+    return 'https://$host/$guid/$thumbnailName';
+  }
+
+  Widget _buildThumbnailPlaceholder({required String blurhash}) {
+    if (blurhash.isNotEmpty) {
+      return FutureBuilder<Uint8List?>(
+        future: BlurHash.decode(blurhash, 32, 24),
+        builder: (context, snapshot) {
+          final bytes = snapshot.data;
+          if (bytes != null) {
+            return Image.memory(
+              bytes,
+              fit: BoxFit.cover,
+              gaplessPlayback: true,
+            );
+          }
+
+          return Container(color: Colors.grey[350]);
+        },
+      );
+    }
+
+    return Container(
+      color: Colors.grey[400],
+      child: const Center(child: Icon(Icons.video_library, size: 40)),
     );
   }
 }

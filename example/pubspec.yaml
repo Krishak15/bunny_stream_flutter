@@ -42,6 +42,7 @@ dependencies:
   # Video player
   chewie: ^1.8.0
   video_player: ^2.10.0
+  blurhash: ^1.2.0
 
 dev_dependencies:
   integration_test:

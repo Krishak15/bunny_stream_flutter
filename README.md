@@ -1,6 +1,4 @@
-# bunny_stream_flutter
-
-Flutter plugin for Bunny Stream on Android and iOS.
+Flutter plugin for Bunny.net Video on Android and iOS.
 
 This package provides a single Dart API for:
 

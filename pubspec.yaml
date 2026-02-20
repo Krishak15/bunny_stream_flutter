@@ -1,6 +1,6 @@
 name: bunny_stream_flutter
 description: "A Flutter plugin for Bunny Video integration."
-version: 0.0.1
+version: 0.1.0+beta
 homepage: https://github.com/Krishak15/bunny_stream_flutter
 
 environment:

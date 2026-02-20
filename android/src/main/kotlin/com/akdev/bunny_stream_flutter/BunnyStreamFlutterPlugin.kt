@@ -11,21 +11,49 @@ import java.net.HttpURLConnection
 import java.net.URL
 import org.json.JSONObject
 
+/**
+ * Android implementation for the `bunny_stream_flutter` method channel.
+ *
+ * This class stores initialization state and proxies Bunny Stream API calls
+ * for video metadata/listing and playback URL generation.
+ *
+ * Supported channel methods:
+ * - `getPlatformVersion`
+ * - `initialize`
+ * - `getVideo`
+ * - `listVideos`
+ * - `getVideoPlayData`
+ *
+ * Not yet implemented natively:
+ * - `listCollections`
+ * - `getCollection`
+ */
 class BunnyStreamFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
+	/** Flutter method channel bound in [onAttachedToEngine]. */
 	private lateinit var channel: MethodChannel
+	/** Bunny management API access key from `initialize`. */
 	private var accessKey: String? = null
+	/** Default library identifier from `initialize`. */
 	private var libraryId: Int? = null
+	/** Optional custom CDN hostname used for playback URL construction. */
 	private var cdnHostname: String? = null
 
+	/** Registers the plugin channel and sets this class as the method call handler. */
 	override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
 		channel = MethodChannel(binding.binaryMessenger, "bunny_stream_flutter")
 		channel.setMethodCallHandler(this)
 	}
 
+	/** Clears channel handler when the plugin is detached from the Flutter engine. */
 	override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
 		channel.setMethodCallHandler(null)
 	}
 
+	/**
+	 * Routes incoming Dart method calls to native handlers.
+	 *
+	 * Unknown methods are returned as not implemented.
+	 */
 	override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
 		when (call.method) {
 			"getPlatformVersion" -> result.success("Android ${android.os.Build.VERSION.RELEASE}")
@@ -44,6 +72,16 @@ class BunnyStreamFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler 
 		}
 	}
 
+	/**
+	 * Validates and stores required initialization parameters.
+	 *
+	 * Required arguments:
+	 * - `accessKey` (non-empty String)
+	 * - `libraryId` (positive Int)
+	 *
+	 * Optional arguments:
+	 * - `cdnHostname` (used for playback URLs if provided)
+	 */
 	private fun handleInitialize(call: MethodCall, result: MethodChannel.Result) {
 		val key = call.argument<String>("accessKey")?.trim()
 		val library = call.argument<Int>("libraryId")
@@ -65,6 +103,12 @@ class BunnyStreamFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler 
 		result.success(null)
 	}
 
+	/**
+	 * Returns playback URLs for adaptive (HLS) and fixed MP4 renditions.
+	 *
+	 * This method does not call Bunny APIs; it deterministically builds URLs using
+	 * video id, library host, and optional token/expiry query parameters.
+	 */
 	private fun handleGetVideoPlayData(call: MethodCall, result: MethodChannel.Result) {
 		if (accessKey.isNullOrEmpty() || libraryId == null) {
 			result.error("NOT_INITIALIZED", "Call initialize() before requesting play data.", null)
@@ -124,6 +168,12 @@ class BunnyStreamFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler 
 		result.success(payload)
 	}
 
+	/**
+	 * Fetches video metadata from Bunny management API.
+	 *
+	 * Network I/O is performed on a background thread and marshaled back to
+	 * the main thread before responding to Flutter.
+	 */
 	private fun handleGetVideo(call: MethodCall, result: MethodChannel.Result) {
 		if (accessKey.isNullOrEmpty()) {
 			result.error("NOT_INITIALIZED", "Call initialize() before requesting video metadata.", null)
@@ -176,6 +226,11 @@ class BunnyStreamFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler 
 		}.start()
 	}
 
+	/**
+	 * Fetches paginated videos from Bunny management API.
+	 *
+	 * Supports optional collection filtering through `collectionId`.
+	 */
 	private fun handleListVideos(call: MethodCall, result: MethodChannel.Result) {
 		if (accessKey.isNullOrEmpty()) {
 			result.error("NOT_INITIALIZED", "Call initialize() before requesting videos.", null)
@@ -240,6 +295,7 @@ class BunnyStreamFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler 
 		}.start()
 	}
 
+	/** Recursively converts a [JSONObject] into a Dart-compatible [Map]. */
 	private fun jsonObjectToMap(json: JSONObject): Map<String, Any?> {
 		val map = mutableMapOf<String, Any?>()
 		val keys = json.keys()
@@ -256,6 +312,7 @@ class BunnyStreamFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler 
 		return map
 	}
 
+	/** Recursively converts a [JSONArray] into a Dart-compatible [List]. */
 	private fun jsonArrayToList(array: JSONArray): List<Any?> {
 		val list = mutableListOf<Any?>()
 		for (i in 0 until array.length()) {
@@ -270,6 +327,12 @@ class BunnyStreamFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler 
 		return list
 	}
 
+	/**
+	 * Appends optional tokenized access parameters to a playback URL.
+	 *
+	 * - `token` is URL-encoded.
+	 * - `expires` is appended as-is.
+	 */
 	private fun buildPlaybackUrl(
 		baseUrl: String,
 		token: String?,

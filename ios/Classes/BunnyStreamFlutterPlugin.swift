@@ -1,11 +1,32 @@
 import Flutter
 import UIKit
 
+/// iOS implementation for the bunny_stream_flutter method channel.
+///
+/// Responsibilities:
+/// - Persist initialization state (`accessKey`, `libraryId`, optional `cdnHostname`)
+/// - Handle metadata/listing calls against Bunny management API
+/// - Build playback URLs (with optional `token` and `expires`)
+///
+/// Supported methods:
+/// - initialize
+/// - getVideo
+/// - listVideos
+/// - getVideoPlayData
+/// - getPlatformVersion
+///
+/// Not implemented natively yet:
+/// - listCollections
+/// - getCollection
 public class BunnyStreamFlutterPlugin: NSObject, FlutterPlugin {
+  /// Bunny Stream management API access key set during initialize.
   private var accessKey: String?
+  /// Default Bunny library id set during initialize.
   private var libraryId: Int?
+  /// Optional custom CDN host used for playback URL generation.
   private var cdnHostname: String?
 
+  /// Registers the plugin as the method call delegate on the shared channel.
   public static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(
       name: "bunny_stream_flutter", binaryMessenger: registrar.messenger())
@@ -13,6 +34,7 @@ public class BunnyStreamFlutterPlugin: NSObject, FlutterPlugin {
     registrar.addMethodCallDelegate(instance, channel: channel)
   }
 
+  /// Dispatches incoming Flutter method calls to concrete native handlers.
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
     switch call.method {
     case "initialize":
@@ -38,6 +60,14 @@ public class BunnyStreamFlutterPlugin: NSObject, FlutterPlugin {
     }
   }
 
+  /// Validates and stores initialization arguments required by other methods.
+  ///
+  /// Required args:
+  /// - accessKey: String
+  /// - libraryId: Int (> 0)
+  ///
+  /// Optional args:
+  /// - cdnHostname: String
   private func handleInitialize(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
     guard let args = call.arguments as? [String: Any] else {
       result(
@@ -68,6 +98,9 @@ public class BunnyStreamFlutterPlugin: NSObject, FlutterPlugin {
     result(nil)
   }
 
+  /// Builds and returns playback URLs for HLS and MP4 renditions.
+  ///
+  /// This method is deterministic and does not perform an API request.
   private func handleGetVideoPlayData(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
     guard accessKey != nil, libraryId != nil else {
       result(
@@ -139,6 +172,7 @@ public class BunnyStreamFlutterPlugin: NSObject, FlutterPlugin {
     result(payload)
   }
 
+  /// Adds optional tokenized query parameters to a playback URL.
   private func buildPlaybackUrl(baseUrl: String, token: String?, expires: Int?) -> String {
     let normalizedToken = token?.isEmpty == false ? token : nil
     if normalizedToken == nil, expires == nil {
@@ -172,6 +206,7 @@ public class BunnyStreamFlutterPlugin: NSObject, FlutterPlugin {
     return components.url?.absoluteString ?? baseUrl
   }
 
+  /// Fetches a single video metadata payload from Bunny management API.
   private func handleGetVideo(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
     guard let accessKey = accessKey, !accessKey.isEmpty else {
       result(
@@ -260,6 +295,9 @@ public class BunnyStreamFlutterPlugin: NSObject, FlutterPlugin {
     task.resume()
   }
 
+  /// Fetches videos for a library, optionally filtered by collection id.
+  ///
+  /// Returns an array extracted from `items` or `results` in API response.
   private func handleListVideos(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
     guard let accessKey = accessKey, !accessKey.isEmpty else {
       result(

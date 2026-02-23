@@ -31,6 +31,8 @@ public class BunnyStreamFlutterPlugin: NSObject, FlutterPlugin {
     let channel = FlutterMethodChannel(
       name: "bunny_stream_flutter", binaryMessenger: registrar.messenger())
     let instance = BunnyStreamFlutterPlugin()
+    let factory = BunnyPlayerPlatformViewFactory(messenger: registrar.messenger())
+    registrar.register(factory, withId: "bunny_stream_player_view_ios")
     registrar.addMethodCallDelegate(instance, channel: channel)
   }
 

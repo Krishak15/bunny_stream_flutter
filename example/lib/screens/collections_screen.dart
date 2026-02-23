@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:bunny_stream_flutter_example/providers/collection_provider.dart';
+import 'package:bunny_stream_flutter_example/models/player_mode.dart';
 import 'package:bunny_stream_flutter_example/screens/collection_videos_screen.dart';
 
 class CollectionsScreen extends StatefulWidget {
-  const CollectionsScreen({super.key});
+  const CollectionsScreen({
+    super.key,
+    required this.playerMode,
+    required this.onPlayerModeChanged,
+  });
+
+  final PlayerMode playerMode;
+  final ValueChanged<PlayerMode> onPlayerModeChanged;
 
   @override
   State<CollectionsScreen> createState() => _CollectionsScreenState();
@@ -22,7 +30,33 @@ class _CollectionsScreenState extends State<CollectionsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Bunny Collections'), centerTitle: true),
+      appBar: AppBar(
+        title: const Text('Bunny Collections'),
+        centerTitle: true,
+        actions: [
+          PopupMenuButton<PlayerMode>(
+            tooltip: 'Select player',
+            icon: const Icon(Icons.smart_display_outlined),
+            onSelected: widget.onPlayerModeChanged,
+            itemBuilder: (context) => [
+              for (final mode in PlayerMode.values)
+                PopupMenuItem<PlayerMode>(
+                  value: mode,
+                  child: Row(
+                    children: [
+                      if (widget.playerMode == mode)
+                        const Icon(Icons.check, size: 18)
+                      else
+                        const SizedBox(width: 18),
+                      const SizedBox(width: 8),
+                      Text(mode.label),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
       body: Consumer<CollectionProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading) {
@@ -70,8 +104,10 @@ class _CollectionsScreenState extends State<CollectionsScreen> {
                     provider.selectCollection(collection);
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (_) =>
-                            CollectionVideosScreen(collection: collection),
+                        builder: (_) => CollectionVideosScreen(
+                          collection: collection,
+                          playerMode: widget.playerMode,
+                        ),
                       ),
                     );
                   },

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'config_extended.dart';
+import 'models/player_mode.dart';
 import 'providers/collection_provider.dart';
 import 'repositories/collection_repository.dart';
 import 'screens/collections_screen.dart';
@@ -14,8 +15,15 @@ void main() async {
   runApp(const BunnyExampleApp());
 }
 
-class BunnyExampleApp extends StatelessWidget {
+class BunnyExampleApp extends StatefulWidget {
   const BunnyExampleApp({super.key});
+
+  @override
+  State<BunnyExampleApp> createState() => _BunnyExampleAppState();
+}
+
+class _BunnyExampleAppState extends State<BunnyExampleApp> {
+  PlayerMode _selectedPlayerMode = PlayerMode.custom;
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +50,15 @@ class BunnyExampleApp extends StatelessWidget {
 
     return ChangeNotifierProvider<CollectionProvider>(
       create: (_) => CollectionProvider(repository: repository),
-      child: const CollectionsScreen(),
+      child: CollectionsScreen(
+        playerMode: _selectedPlayerMode,
+        onPlayerModeChanged: (mode) {
+          if (mode == _selectedPlayerMode) return;
+          setState(() {
+            _selectedPlayerMode = mode;
+          });
+        },
+      ),
     );
   }
 }

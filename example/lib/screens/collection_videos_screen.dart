@@ -6,14 +6,20 @@ import 'package:blurhash/blurhash.dart';
 import 'package:bunny_stream_flutter_example/models/bunny_collection.dart'
     as models;
 import 'package:bunny_stream_flutter_example/models/video_detail.dart';
+import 'package:bunny_stream_flutter_example/models/player_mode.dart';
 import 'package:bunny_stream_flutter_example/config_extended.dart';
 import 'package:bunny_stream_flutter_example/screens/video_player_screen.dart';
 import 'package:bunny_stream_flutter/bunny_stream_flutter.dart';
 
 class CollectionVideosScreen extends StatefulWidget {
   final models.BunnyCollection collection;
+  final PlayerMode playerMode;
 
-  const CollectionVideosScreen({super.key, required this.collection});
+  const CollectionVideosScreen({
+    super.key,
+    required this.collection,
+    required this.playerMode,
+  });
 
   @override
   State<CollectionVideosScreen> createState() => _CollectionVideosScreenState();
@@ -39,13 +45,13 @@ class _CollectionVideosScreenState extends State<CollectionVideosScreen> {
     try {
       final bunny = BunnyStreamFlutter();
 
-      // Initialize Bunny Stream with configuration from BunnyConfig. 
+      // Initialize Bunny Stream with configuration from BunnyConfig.
       await bunny.initialize(
         accessKey: BunnyConfig.accessKey,
         libraryId: BunnyConfig.libraryId,
         cdnHostname: BunnyConfig.cdnHostname,
         token: BunnyConfig.secureToken,
-        expires: BunnyConfig.tokenExpires, 
+        expires: BunnyConfig.tokenExpires,
       );
 
       final videos = await bunny.listVideos(
@@ -134,6 +140,7 @@ class _CollectionVideosScreenState extends State<CollectionVideosScreen> {
                 builder: (_) => VideoPlayerScreen(
                   collection: widget.collection,
                   videoId: video.guid,
+                  playerMode: widget.playerMode,
                 ),
               ),
             );
@@ -244,7 +251,6 @@ class _VideoTile extends StatelessWidget {
     );
   }
 
-  
   /// Builds a fully-qualified thumbnail URL for a video.
   ///
   /// Returns `null` when the thumbnail file name is empty or when the video

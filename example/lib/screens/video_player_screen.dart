@@ -6,6 +6,7 @@ import 'package:video_player/video_player.dart';
 import 'package:bunny_stream_flutter_example/models/bunny_collection.dart'
     as models;
 import 'package:bunny_stream_flutter_example/config_extended.dart';
+import 'package:bunny_stream_flutter_example/models/player_mode.dart';
 import 'package:bunny_stream_flutter/bunny_stream_flutter.dart';
 
 enum VideoQuality { auto, p360, p720, p1080 }
@@ -28,8 +29,14 @@ extension VideoQualityExt on VideoQuality {
 class VideoPlayerScreen extends StatefulWidget {
   final models.BunnyCollection collection;
   final String? videoId;
+  final PlayerMode playerMode;
 
-  const VideoPlayerScreen({super.key, required this.collection, this.videoId});
+  const VideoPlayerScreen({
+    super.key,
+    required this.collection,
+    this.videoId,
+    this.playerMode = PlayerMode.custom,
+  });
 
   @override
   State<VideoPlayerScreen> createState() => _VideoPlayerScreenState();
@@ -50,7 +57,9 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     final resolvedVideoId =
         widget.videoId?.trim() ?? BunnyConfig.videoId.trim();
     if (resolvedVideoId.isNotEmpty) {
-      _initializePlayer(resolvedVideoId);
+      if (widget.playerMode == PlayerMode.custom) {
+        _initializePlayer(resolvedVideoId);
+      }
     } else {
       _error = 'No video ID provided';
     }
@@ -260,7 +269,9 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         title: Text(widget.collection.displayName),
         centerTitle: true,
         actions: [
-          if (_chewieController != null && _availableQualities.length > 1)
+          if (widget.playerMode == PlayerMode.custom &&
+              _chewieController != null &&
+              _availableQualities.length > 1)
             PopupMenuButton<VideoQuality>(
               icon: const Icon(Icons.settings),
               tooltip: 'Quality',
@@ -290,6 +301,23 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
   Widget _buildBody() {
     final retryVideoId = widget.videoId?.trim() ?? BunnyConfig.videoId.trim();
+
+    if (widget.playerMode == PlayerMode.bunnyBuiltIn) {
+      if (_error != null) {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              const SizedBox(height: 16),
+              Text(_error!),
+            ],
+          ),
+        );
+      }
+
+      return _buildBuiltInPlayerBody(retryVideoId);
+    }
 
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -321,27 +349,53 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     return Column(
       children: [
         Expanded(child: Chewie(controller: _chewieController!)),
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                widget.collection.displayName,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+        _buildCollectionFooter(),
+      ],
+    );
+  }
+
+  Widget _buildBuiltInPlayerBody(String videoId) {
+    return Column(
+      children: [
+        Expanded(
+          child: Center(
+            child: SizedBox(
+              width: double.infinity,
+              height: 280,
+              child: BunnyBuiltInPlayerView(
+                accessKey: BunnyConfig.accessKey,
+                videoId: videoId,
+                libraryId: BunnyConfig.libraryId,
+                token: BunnyConfig.secureToken,
+                expires: BunnyConfig.tokenExpires,
+                isPortrait: false,
+                isScreenShotProtectEnable: false,
               ),
-              const SizedBox(height: 8),
-              Text(
-                '${widget.collection.videoCount} videos in collection',
-                style: TextStyle(color: Colors.grey[600]),
-              ),
-            ],
+            ),
           ),
         ),
+        _buildCollectionFooter(),
       ],
+    );
+  }
+
+  Widget _buildCollectionFooter() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            widget.collection.displayName,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '${widget.collection.videoCount} videos in collection',
+            style: TextStyle(color: Colors.grey[600]),
+          ),
+        ],
+      ),
     );
   }
 }

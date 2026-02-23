@@ -1,5 +1,7 @@
 import 'package:flutter/services.dart';
 
+export 'bunny_built_in_player_view.dart';
+
 import 'bunny_stream_flutter_platform_interface.dart';
 
 class BunnyStreamFlutter {

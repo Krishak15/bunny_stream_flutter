@@ -41,6 +41,10 @@ class BunnyStreamFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler 
 	/** Registers the plugin channel and sets this class as the method call handler. */
 	override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
 		channel = MethodChannel(binding.binaryMessenger, "bunny_stream_flutter")
+		binding.platformViewRegistry.registerViewFactory(
+			"bunny_stream_player_view_android",
+			BunnyPlayerViewFactory(),
+		)
 		channel.setMethodCallHandler(this)
 	}
 

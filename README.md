@@ -1,33 +1,43 @@
-## Flutter wrapper for Bunny.net mobile SDK.
+# bunny_stream_flutter
 
-This package provides a single Dart API for:
+Flutter wrapper around Bunny Stream mobile SDK integrations.
 
-- initializing Bunny Stream credentials
-- fetching video metadata/listings
-- generating playback URLs (HLS + MP4 renditions)
+This plugin currently provides:
 
-## Features
+- Bunny Stream data/API calls via `BunnyStreamFlutter`
+- Native built-in Bunny player widget via `BunnyBuiltInPlayerView`
 
-- Cross-platform method-channel API (`android`, `ios`)
-- Typed Dart models (`BunnyVideo`, `BunnyCollection`, `BunnyVideoPlayData`)
-- Unified error handling through `BunnyStreamException`
+## Available features
+
+### API features
+
+- Initialize Bunny credentials and defaults via `initialize`
+- Fetch paginated videos via `listVideos`
+- Fetch single video metadata via `getVideo`
+- Generate playback links (HLS + fallback + renditions) via `getVideoPlayData`
 - Optional tokenized playback URL generation (`token`, `expires`)
+- Typed models: `BunnyVideo`, `BunnyCollection`, `BunnyVideoPlayData`
+- Unified platform error mapping through `BunnyStreamException`
 
-## Platform support
+### Player features
 
-| Platform | Support |
-|:---------|:-------:|
-| Android  |   ✅    |
-| iOS      |   ✅    |
+- Native built-in Bunny player widget: `BunnyBuiltInPlayerView`
+- Android and iOS platform view integration
+- Secure playback inputs supported in widget API (`token`, `expires`, `referer`)
 
-Requirements:
+### Current native method support status
 
-- Flutter: `>=3.38.4`
-- Dart: `^3.10.3`
-- Android min SDK: `26`
-- iOS: `15.0+`
+- Implemented natively on Android and iOS: `initialize`, `listVideos`, `getVideo`, `getVideoPlayData`
+- Not yet implemented natively: `listCollections`, `getCollection`
 
-## Quick start
+## Requirements
+
+- Flutter `>=3.38.4`
+- Dart `^3.10.3`
+- Android `minSdk 26`
+- iOS `15.0+`
+
+## Quick start (API)
 
 ```dart
 import 'package:bunny_stream_flutter/bunny_stream_flutter.dart';
@@ -37,7 +47,7 @@ final bunny = BunnyStreamFlutter();
 await bunny.initialize(
   accessKey: 'YOUR_STREAM_ACCESS_KEY',
   libraryId: 12345,
-  cdnHostname: 'vz-12345.b-cdn.net', // optional
+  cdnHostname: 'vz-12345.b-cdn.net',
 );
 
 final playData = await bunny.getVideoPlayData(
@@ -48,49 +58,121 @@ final playData = await bunny.getVideoPlayData(
 );
 
 print(playData.playlistUrl);
-print(playData.url720p);
 ```
 
-## Required Bunny Stream values
+## Quick start (built-in player)
 
-Collect these from Bunny Stream dashboard/back-end configuration:
+```dart
+import 'package:bunny_stream_flutter/bunny_stream_flutter.dart';
 
-- `libraryId` (stream library id)
-- `accessKey` (library access key)
-- `videoId` (video guid)
-- `cdnHostname` (optional custom host)
-- `token` and `expires` (optional; for secure playback)
+SizedBox(
+  height: 260,
+  child: BunnyBuiltInPlayerView(
+    accessKey: 'YOUR_STREAM_ACCESS_KEY',
+    videoId: 'VIDEO_GUID',
+    libraryId: 12345,
+    token: 'OPTIONAL_SECURE_TOKEN',
+    expires: 1735689600,
+    referer: 'https://your-domain.com',
+    isPortrait: false,
+    isScreenShotProtectEnable: false,
+  ),
+)
+```
 
-## Bunny dashboard setup notes
+## User-side setup required
 
-Before using this plugin in production, configure your Bunny Stream library:
+### Android
 
-- Create a Stream library in Bunny.net.
-- Create at least one collection in that library to organize/store your videos.
-- Create a CDN hostname in the Bunny console for delivery.
-- Enable direct play in Bunny dashboard at `Stream > Security > General`.
+Apply the following in your app project (the app that consumes this plugin):
 
-You can find the library-specific settings here:
+1. Add JitPack repository in your top-level `android/build.gradle` or `android/build.gradle.kts`:
 
-- https://dash.bunny.net/stream/$yourSpecificlibraryId/api
+```kotlin
+allprojects {
+  repositories {
+    google()
+    mavenCentral()
+    maven("https://jitpack.io")
+  }
+}
+```
+
+2. Ensure `minSdk` is at least `26` in your app module.
+
+3. Use an AppCompat-based app/activity theme (required by Bunny native UI):
+
+```xml
+<application
+    ...
+    android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+```
+
+4. Ensure your Flutter activity themes are AppCompat too (`LaunchTheme`/`NormalTheme` in `styles.xml`):
+
+```xml
+<style name="LaunchTheme" parent="@style/Theme.AppCompat.Light.NoActionBar" />
+<style name="NormalTheme" parent="@style/Theme.AppCompat.Light.NoActionBar" />
+```
+
+5. Add ProGuard/R8 rule in `android/app/proguard-rules.pro`:
+
+```pro
+-keep class net.bunny.bunnystreamplayer.** { *; }
+```
+
+6. Keep internet permission enabled in manifest:
+
+```xml
+<uses-permission android:name="android.permission.INTERNET" />
+```
+
+### iOS
+
+Apply the following in your iOS app project:
+
+1. Ensure iOS deployment target is `15.0` or higher (Podfile + Xcode target).
+
+2. Enable Swift Package Manager support in Flutter toolchain:
+
+```bash
+flutter config --enable-swift-package-manager
+```
+
+3. Add Bunny iOS SDK package in Xcode (Runner target):
+
+- Package URL: `https://github.com/BunnyWay/bunny-stream-ios`
+- Add product: `BunnyStreamPlayer`
+
+4. Refresh iOS dependencies:
+
+```bash
+flutter clean
+flutter pub get
+cd ios && pod install
+```
+
+If the Bunny iOS package is not linked correctly, the built-in player view falls back to an error label at runtime.
+
+## Required Bunny values
+
+- `libraryId`
+- `accessKey`
+- `videoId`
+- Optional `cdnHostname`
+- Optional `token` and `expires` (recommended from backend for secured playback)
 
 ## Security notes
 
-- Do not hardcode production `accessKey` in client apps.
-- Generate `token` and `expires` on your backend for protected playback.
-- Keep Bunny secrets server-side whenever possible.
+- Do not hardcode production access keys in client apps.
+- Generate `token`/`expires` server-side for protected playback.
+- Keep secrets on backend whenever possible.
 
 ## API reference
 
 Public entrypoint: `BunnyStreamFlutter`
 
-Official Bunny references:
-
-- Stream API reference: https://docs.bunny.net/api-reference/stream
-- Bunny Stream Android SDK: https://github.com/BunnyWay/bunny-stream-android
-- Bunny Stream iOS SDK: https://github.com/BunnyWay/bunny-stream-ios
-
-### `initialize`
+### initialize
 
 ```dart
 Future<void> initialize({
@@ -102,9 +184,7 @@ Future<void> initialize({
 })
 ```
 
-Stores library credentials and optional host defaults for subsequent calls.
-
-### `listVideos`
+### listVideos
 
 ```dart
 Future<List<BunnyVideo>> listVideos({
@@ -116,9 +196,7 @@ Future<List<BunnyVideo>> listVideos({
 })
 ```
 
-Returns paginated videos for a library.
-
-### `getVideo`
+### getVideo
 
 ```dart
 Future<BunnyVideo> getVideo({
@@ -127,9 +205,7 @@ Future<BunnyVideo> getVideo({
 })
 ```
 
-Returns metadata for a single video.
-
-### `listCollections`
+### listCollections
 
 ```dart
 Future<List<BunnyCollection>> listCollections({
@@ -140,9 +216,7 @@ Future<List<BunnyCollection>> listCollections({
 })
 ```
 
-Returns paginated collections for a library.
-
-### `getCollection`
+### getCollection
 
 ```dart
 Future<BunnyCollection> getCollection({
@@ -151,9 +225,7 @@ Future<BunnyCollection> getCollection({
 })
 ```
 
-Returns metadata for a single collection.
-
-### `getVideoPlayData`
+### getVideoPlayData
 
 ```dart
 Future<BunnyVideoPlayData> getVideoPlayData({
@@ -164,65 +236,10 @@ Future<BunnyVideoPlayData> getVideoPlayData({
 })
 ```
 
-Builds playback URLs including:
+## SDK references
 
-- `playlistUrl` (HLS)
-- `fallbackUrl`
-- `url360p`, `url720p`, `url1080p`
-
-## Model types
-
-### `BunnyVideo`
-
-- `id`: resolved from `guid` or `id`
-- `raw`: full API payload as immutable map
-- `availableResolutions`: parsed list from `availableResolutions`
-
-### `BunnyCollection`
-
-- `id`: resolved from `guid` or `id`
-- `raw`: full API payload as immutable map
-
-### `BunnyVideoPlayData`
-
-- `playlistUrl`, `fallbackUrl`
-- `url360p`, `url720p`, `url1080p`
-- `raw`: immutable source payload
-
-### `BunnyStreamException`
-
-All `PlatformException` failures are mapped to:
-
-```dart
-BunnyStreamException {
-  String code;
-  String message;
-  Object? details;
-}
-```
-
-Example:
-
-```dart
-try {
-  await bunny.initialize(accessKey: key, libraryId: libraryId);
-} on BunnyStreamException catch (error) {
-  print('${error.code}: ${error.message}');
-}
-```
-
-## Native implementation status
-
-Current Android/iOS native handlers include:
-
-- `initialize`
-- `getVideo`
-- `listVideos`
-- `getVideoPlayData`
-
-Currently unimplemented natively on both platforms:
-
-- `listCollections`
-- `getCollection`
+- Bunny Stream API docs: https://docs.bunny.net/api-reference/stream
+- Bunny Android SDK: https://github.com/BunnyWay/bunny-stream-android
+- Bunny iOS SDK: https://github.com/BunnyWay/bunny-stream-ios
 
 

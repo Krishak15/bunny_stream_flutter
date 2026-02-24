@@ -1,6 +1,7 @@
 import 'dart:developer' as developer;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:chewie/chewie.dart';
 import 'package:video_player/video_player.dart';
 import 'package:bunny_stream_flutter_example/models/bunny_collection.dart'
@@ -203,6 +204,11 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       allowFullScreen: true,
       allowMuting: true,
       showControls: true,
+      deviceOrientationsOnEnterFullScreen: const [
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ],
+      deviceOrientationsAfterFullScreen: const [DeviceOrientation.portraitUp],
       cupertinoProgressColors: ChewieProgressColors(
         playedColor: Theme.of(context).primaryColor,
         handleColor: Theme.of(context).primaryColor,
@@ -259,6 +265,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   void dispose() {
     _chewieController?.dispose();
     _videoPlayerController?.dispose();
+    SystemChrome.setPreferredOrientations(const [DeviceOrientation.portraitUp]);
     super.dispose();
   }
 

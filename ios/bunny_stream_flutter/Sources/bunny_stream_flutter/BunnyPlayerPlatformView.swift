@@ -1,3 +1,4 @@
+import BunnyStreamPlayer
 import Flutter
 import SwiftUI
 import UIKit
@@ -16,17 +17,19 @@ class BunnyPlayerPlatformView: NSObject, FlutterPlatformView {
         let videoId = (params?["videoId"] as? String ?? "").trimmingCharacters(
             in: .whitespacesAndNewlines)
         let libraryId = params?["libraryId"] as? Int ?? 0
+        let playIconAsset = params?["playIconAsset"] as? String ?? ""
         let token = params?["token"] as? String
-        let expires = params?["expires"] as? Int
-        let referer = params?["referer"] as? String
+        let expires =
+            (params?["expires"] as? Int64)
+            ?? (params?["expires"] as? Int).map(Int64.init)
 
         let controller = BunnyPlayerViewController(
             accessKey: accessKey,
             videoId: videoId,
             libraryId: libraryId,
+            playIconAsset: playIconAsset,
             token: token,
             expires: expires,
-            referer: referer
         )
         playerView = controller.view
         super.init()
@@ -67,24 +70,24 @@ class BunnyPlayerViewController: UIViewController {
     let accessKey: String?
     let videoId: String
     let libraryId: Int
+    let playIconAsset: String
     let token: String?
-    let expires: Int?
-    let referer: String?
+    let expires: Int64?
 
     init(
         accessKey: String?,
         videoId: String,
         libraryId: Int,
+        playIconAsset: String,
         token: String?,
-        expires: Int?,
-        referer: String?
+        expires: Int64?,
     ) {
         self.accessKey = accessKey
         self.videoId = videoId
         self.libraryId = libraryId
+        self.playIconAsset = playIconAsset
         self.token = token
         self.expires = expires
-        self.referer = referer
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -97,13 +100,15 @@ class BunnyPlayerViewController: UIViewController {
         view.backgroundColor = .clear
 
         #if canImport(BunnyStreamPlayer)
+            let iconImage = loadFlutterAsset(named: playIconAsset)
+            let icons = PlayerIcons(play: iconImage)
             let playerView = BunnyFlutterPlayer(
                 accessKey: accessKey,
                 videoId: videoId,
                 libraryId: libraryId,
+                playerIcons: icons,
                 token: token,
-                expires: expires,
-                referer: referer
+                expires: expires
             )
             let hostingController = UIHostingController(rootView: playerView)
             addChild(hostingController)
@@ -123,7 +128,7 @@ class BunnyPlayerViewController: UIViewController {
             label.textAlignment = .center
             label.numberOfLines = 0
             label.text =
-                "Bunny iOS native player dependency is unavailable. Enable Swift Package Manager and sync iOS dependencies."
+                "Bunny iOS native player dependency is unavailable. Swift Package Manager may be enabled, but Bunny iOS package is not linked. Add https://github.com/BunnyWay/bunny-stream-ios in Xcode (Runner > Package Dependencies) and select BunnyStreamPlayer."
             view.addSubview(label)
             NSLayoutConstraint.activate([
                 label.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
@@ -131,6 +136,21 @@ class BunnyPlayerViewController: UIViewController {
                 label.centerYAnchor.constraint(equalTo: view.centerYAnchor),
             ])
         #endif
+    }
+
+    private func loadFlutterAsset(named asset: String) -> Image {
+        guard !asset.isEmpty else {
+            return Image(systemName: "play.fill")
+        }
+
+        let key = FlutterDartProject.lookupKey(forAsset: asset)
+        if let path = Bundle.main.path(forResource: key, ofType: nil),
+            let uiImage = UIImage(contentsOfFile: path)
+        {
+            return Image(uiImage: uiImage)
+        }
+
+        return Image(systemName: "play.fill")
     }
 }
 
@@ -141,9 +161,9 @@ class BunnyPlayerViewController: UIViewController {
         let accessKey: String?
         let videoId: String
         let libraryId: Int
+        let playerIcons: PlayerIcons
         let token: String?
-        let expires: Int?
-        let referer: String?
+        let expires: Int64?
 
         var body: some View {
             BunnyStreamPlayer(
@@ -152,7 +172,7 @@ class BunnyPlayerViewController: UIViewController {
                 libraryId: libraryId,
                 token: token,
                 expires: expires,
-                referer: referer
+                playerIcons: playerIcons,
             )
         }
     }

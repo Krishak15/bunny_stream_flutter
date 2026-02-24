@@ -185,7 +185,7 @@ class VideoDetailsModel {
   }
 }
 
-/// Safe conversion from dynamic object to Map<String, dynamic>
+/// Safe conversion from dynamic object to Map< String, dynamic >
 Map<String, dynamic> _toStringDynamicMap(dynamic obj) {
   if (obj is Map<String, dynamic>) return obj;
   if (obj is Map) {

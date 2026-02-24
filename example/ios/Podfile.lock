@@ -1,28 +1,22 @@
 PODS:
   - blurhash (0.0.1):
     - Flutter
-  - bunny_stream_flutter (0.0.1):
-    - Flutter
   - Flutter (1.0.0)
 
 DEPENDENCIES:
   - blurhash (from `.symlinks/plugins/blurhash/ios`)
-  - bunny_stream_flutter (from `.symlinks/plugins/bunny_stream_flutter/ios`)
   - Flutter (from `Flutter`)
 
 EXTERNAL SOURCES:
   blurhash:
     :path: ".symlinks/plugins/blurhash/ios"
-  bunny_stream_flutter:
-    :path: ".symlinks/plugins/bunny_stream_flutter/ios"
   Flutter:
     :path: Flutter
 
 SPEC CHECKSUMS:
   blurhash: 7d0156d68a21f3d4276b71c2fae094d9c0753959
-  bunny_stream_flutter: b4df2463f8dea9ef845a3da1e77f86ab87e42f1f
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
 
-PODFILE CHECKSUM: ae9e65fc23486119b8e977fd41d9213f251e537a
+PODFILE CHECKSUM: 6ffdf07aa790f78d4456619ddd81d2ef4dd12c71
 
 COCOAPODS: 1.16.2

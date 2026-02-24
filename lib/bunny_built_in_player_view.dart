@@ -55,7 +55,6 @@ class BunnyBuiltInPlayerView extends StatelessWidget {
           'libraryId': libraryId,
           'token': token,
           'expires': expires,
-          'referer': referer,
           'playIconAsset': playIconAsset,
         },
         creationParamsCodec: const StandardMessageCodec(),

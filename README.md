@@ -1,6 +1,4 @@
-# bunny_stream_flutter
-
-Flutter wrapper around Bunny Stream mobile SDK integrations.
+# A wrapper for Bunny.net mobile SDK for Android & iOS
 
 This plugin currently provides:
 
@@ -73,7 +71,6 @@ SizedBox(
     libraryId: 12345,
     token: 'OPTIONAL_SECURE_TOKEN',
     expires: 1735689600,
-    referer: 'https://your-domain.com',
     isPortrait: false,
     isScreenShotProtectEnable: false,
   ),

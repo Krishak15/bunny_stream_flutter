@@ -31,7 +31,10 @@ class _CollectionsScreenState extends State<CollectionsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Bunny Collections'),
+        title: const Text(
+          'Bunny Collections      Switch player ->',
+          style: TextStyle(fontSize: 14),
+        ),
         centerTitle: true,
         actions: [
           PopupMenuButton<PlayerMode>(

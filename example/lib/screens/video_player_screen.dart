@@ -31,12 +31,17 @@ class VideoPlayerScreen extends StatefulWidget {
   final models.BunnyCollection collection;
   final String? videoId;
   final PlayerMode playerMode;
+  final ValueChanged<Duration>? onPositionChanged;
+  final void Function(ChewieController chewie, VideoPlayerController video)?
+  onControllersReady;
 
   const VideoPlayerScreen({
     super.key,
     required this.collection,
     this.videoId,
     this.playerMode = PlayerMode.custom,
+    this.onPositionChanged,
+    this.onControllersReady,
   });
 
   @override
@@ -46,11 +51,38 @@ class VideoPlayerScreen extends StatefulWidget {
 class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   VideoPlayerController? _videoPlayerController;
   ChewieController? _chewieController;
+  VoidCallback? _videoPositionListener;
+  Duration _lastReportedPosition = Duration.zero;
   bool _isLoading = false;
   String? _error;
   VideoQuality _selectedQuality = VideoQuality.auto;
   BunnyVideoPlayData? _cachedPlayData;
   List<VideoQuality> _availableQualities = [VideoQuality.auto];
+
+  void _detachPositionListener() {
+    final controller = _videoPlayerController;
+    final listener = _videoPositionListener;
+    if (controller != null && listener != null) {
+      controller.removeListener(listener);
+    }
+    _videoPositionListener = null;
+  }
+
+  void _attachPositionListener(VideoPlayerController controller) {
+    _detachPositionListener();
+
+    void listener() {
+      final position = controller.value.position;
+      if (position != _lastReportedPosition) {
+        _lastReportedPosition = position;
+        widget.onPositionChanged?.call(position);
+      }
+    }
+
+    _videoPositionListener = listener;
+    controller.addListener(listener);
+    listener();
+  }
 
   @override
   void initState() {
@@ -186,6 +218,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     final wasPlaying = _videoPlayerController?.value.isPlaying ?? false;
 
     // Dispose old controllers
+    _detachPositionListener();
     _chewieController?.dispose();
     _videoPlayerController?.dispose();
 
@@ -227,6 +260,9 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
     _videoPlayerController = videoController;
     _chewieController = chewieController;
+    _lastReportedPosition = videoController.value.position;
+    _attachPositionListener(videoController);
+    widget.onControllersReady?.call(chewieController, videoController);
 
     if (mounted) {
       setState(() {
@@ -263,6 +299,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
   @override
   void dispose() {
+    _detachPositionListener();
     _chewieController?.dispose();
     _videoPlayerController?.dispose();
     SystemChrome.setPreferredOrientations(const [DeviceOrientation.portraitUp]);

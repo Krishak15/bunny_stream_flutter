@@ -49,6 +49,9 @@ class BunnyBuiltInPlayerView extends StatelessWidget {
       return UiKitView(
         viewType: 'bunny_stream_player_view_ios',
         layoutDirection: TextDirection.ltr,
+        gestureRecognizers: const <Factory<OneSequenceGestureRecognizer>>{
+          Factory<EagerGestureRecognizer>(EagerGestureRecognizer.new),
+        },
         creationParams: <String, dynamic>{
           'accessKey': accessKey,
           'videoId': videoId,
@@ -95,7 +98,9 @@ class _BunnyAndroidBuiltInPlayerView extends StatelessWidget {
       surfaceFactory: (context, controller) {
         return AndroidViewSurface(
           controller: controller as AndroidViewController,
-          gestureRecognizers: const <Factory<OneSequenceGestureRecognizer>>{},
+          gestureRecognizers: const <Factory<OneSequenceGestureRecognizer>>{
+            Factory<EagerGestureRecognizer>(EagerGestureRecognizer.new),
+          },
           hitTestBehavior: PlatformViewHitTestBehavior.opaque,
         );
       },
